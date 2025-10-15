@@ -28,7 +28,7 @@ enable
             transport input ssh 
             logging synchronous 
             exit
-        !configurando a Line VTY
+        !configurando a Line SVY
         ip default-gateway 192.168.1.254
         interface vlan 1 
             description interface de SVI

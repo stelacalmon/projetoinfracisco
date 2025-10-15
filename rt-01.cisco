@@ -1,10 +1,13 @@
 !entrar no modo Exec Privilegiado 
 enable
-    clock set 20:20:00 10 October 2025
+    clock set 20:20:00 15 October 2025
     configure terminal 
-        hostname sw-02
+        hostname rt-01
         service password-encryption 
+        security passwords min-length 8
+        login block-for 120 attempts 2 within 60 
         service timestamps log datetime msec
+        service timestamps debug datetime msec
         logging buffered 4096 
         no ip domain-lookup 
         banner motd #Stela Calmon LGPD#
@@ -12,7 +15,7 @@ enable
         username senac secret 123@SENAC 
         username tatuape password 123@senac 
         username admin Privilege 15 secret 123@senac 
-        no cdp run 
+        no cdp run
         no lldp run
         line console 0
             login local 
@@ -28,20 +31,16 @@ enable
             transport input ssh 
             logging synchronous 
             exit
-            !configurando a Line SVY
-        ip default-gateway 192.168.1.254
-        interface vlan 1 
-            description interface de SVI
-            ip address 192.168.1.250 255.255.255.0
-            no shutdown
-            exit
-            !configuração do SSH
+        !configuração do SSH
             ip domain-name senac.br 
             crypto key generate rsa general-keys modulus 1024 
             ip ssh version 2 
             ip ssh time-out 60
             ip ssh authentication-retries 2
-            end
+            !Configuração Interface LAN 
+            interface gigabitEthernet 0/0
+                description interface de gateway da LAN 
+                ip address 192.168.1.254 255.255.255.0
+                no shutdown
+                end 
     copy running-config startup-config
-    write 
-    
