@@ -1,0 +1,90 @@
+! ============================================================
+! CISCO 1941 - CONFIGURAÇÃO COMPLETA EXPLICADA
+! Autor: [Seu Nome]
+! Projeto: Configuração padrão de roteador Cisco 1941
+! Descrição: Script documentado linha por linha
+! ============================================================
+
+! ---------- MODO PRIVILEGIADO ----------
+enable
+configure terminal
+
+! ---------- CONFIGURAÇÃO BÁSICA ----------
+hostname ROTEADOR-1941               ! Define o nome do roteador
+no ip domain-lookup                  ! Evita tentativas de DNS locais incorretas
+service password-encryption          ! Criptografa senhas no arquivo de configuração
+enable secret cisco123               ! Define senha criptografada para modo privilegiado
+banner motd # ACESSO RESTRITO - USO AUTORIZADO APENAS! #
+
+! ---------- CONFIGURAÇÃO DE INTERFACES ----------
+interface GigabitEthernet0/0
+ description CONEXAO_LAN
+ ip address 192.168.1.1 255.255.255.0
+ no shutdown
+
+interface GigabitEthernet0/1
+ description CONEXAO_WAN
+ ip address dhcp
+ no shutdown
+
+! ---------- VLANs e SUBINTERFACES ----------
+interface GigabitEthernet0/0.10
+ encapsulation dot1Q 10
+ description VLAN 10 - REDE ADMIN
+ ip address 192.168.10.1 255.255.255.0
+
+interface GigabitEthernet0/0.20
+ encapsulation dot1Q 20
+ description VLAN 20 - REDE USUARIOS
+ ip address 192.168.20.1 255.255.255.0
+
+! ---------- CONFIGURAÇÃO DE ROTEAMENTO ----------
+ip routing
+ip route 0.0.0.0 0.0.0.0 GigabitEthernet0/1
+
+! ---------- SERVIÇOS BÁSICOS ----------
+ip dhcp excluded-address 192.168.1.1 192.168.1.10
+ip dhcp pool LAN-POOL
+ network 192.168.1.0 255.255.255.0
+ default-router 192.168.1.1
+ dns-server 8.8.8.8 8.8.4.4
+
+! ---------- CONFIGURAÇÃO DE SEGURANÇA ----------
+username admin privilege 15 secret admin123
+line console 0
+ logging synchronous
+ password console123
+ login
+line vty 0 4
+ transport input ssh
+ login local
+ exec-timeout 10 0
+
+! ---------- CONFIGURAÇÃO DE SSH ----------
+ip domain-name empresa.local
+crypto key generate rsa modulus 1024
+ip ssh version 2
+
+! ---------- CONFIGURAÇÃO DE NAT/PAT ----------
+access-list 1 permit 192.168.1.0 0.0.0.255
+access-list 1 permit 192.168.10.0 0.0.0.255
+access-list 1 permit 192.168.20.0 0.0.0.255
+
+ip nat inside source list 1 interface GigabitEthernet0/1 overload
+
+interface GigabitEthernet0/0
+ ip nat inside
+interface GigabitEthernet0/0.10
+ ip nat inside
+interface GigabitEthernet0/0.20
+ ip nat inside
+interface GigabitEthernet0/1
+ ip nat outside
+
+! ---------- SALVAR CONFIGURAÇÃO ----------
+end
+write memory
+
+! ============================================================
+! FIM DO SCRIPT - ROTEADOR 1941
+! ============================================================
